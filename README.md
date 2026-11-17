@@ -35,6 +35,27 @@ nativecluster run gemma4 "say hi"       # one answer from your cluster, in the t
 NativeCluster puts both in `~/.claude/skills` when it installs, so a Mac running it already has them.
 These are the same files, byte for byte, as the release named in `.claude-plugin/plugin.json`.
 
+## What these skills do on your Mac
+
+They are instructions for your agent, with no code of their own: no hooks, no MCP servers, no scripts.
+What they tell the agent to run, fetch or send:
+
+- **Install NativeCluster, only with your OK.** The install line above downloads NativeCluster from
+  updates.nativecluster.com, and checks its SHA-256, our team's signature and Apple's notarization
+  before it copies anything. It never uses sudo. Homebrew, with your OK, installs the same release.
+- **The `nativecluster` and `ncdev` commands on your Mac.** They talk to NativeCluster on this Mac, which
+  reaches our servers only for what its [Privacy Policy](https://www.nativecluster.com/privacy) lists,
+  such as signing in, model downloads and updates.
+- **Model calls to `http://localhost:8487/v1`,** NativeCluster's local address. They run on your own
+  Macs, never on a hosted AI service, and never reach us.
+- **NativeCluster's docs,** read from www.nativecluster.com.
+- **`nativecluster-app` works on the app you ask it to port,** in your folder, and runs `ncdev` to check,
+  package and install it on this Mac.
+
+They leave to you: installing NativeCluster, signing in (in your browser), the few steps the Mac confirms
+with Touch ID or its password, and choosing each model to download, having seen its size and the folder it
+goes to. They never ask for a password, a PIN or a key, and never print one.
+
 ### As a Claude Code plugin
 
 ```
