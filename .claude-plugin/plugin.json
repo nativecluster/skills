@@ -1,0 +1,13 @@
+{
+  "name": "nativecluster",
+  "version": "0.4.20",
+  "description": "Set up and use NativeCluster, and build apps for it: private AI on a team's own Macs, with one OpenAI-compatible endpoint, sign-in and roles.",
+  "author": {
+    "name": "NativeCluster by Ederworks",
+    "url": "https://www.nativecluster.com"
+  },
+  "homepage": "https://www.nativecluster.com/docs",
+  "repository": "https://github.com/nativecluster/skills",
+  "license": "Apache-2.0",
+  "keywords": ["local-llm", "self-hosted", "openai-compatible", "apple-silicon", "mac"]
+}

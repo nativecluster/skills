@@ -1,0 +1,75 @@
+# nc-app.json
+
+`ncdev spec schema` has every field; `ncdev spec permissions` every
+permission. `ncdev new` writes a working one. The fields:
+
+| Field | What |
+|---|---|
+| `format` | `"nc-app.v1"` |
+| `id` | lowercase letters, digits and `-`, 2 to 32: `"classics"` |
+| `name` | what people see, up to 40: `"Modern Classics"` |
+| `min_host` | optional: the oldest NativeCluster it runs on |
+| `version` | optional: the app's own version, `"0.1.0"`: numbers and dots, optionally a short label after a dash (`"1.3.0-beta.2"`), at most 32. Its card on Apps shows it ("Modern Classics 1.3 · Live version is 1.2") and its Publish names it ("Publish 1.3"). It needs `"min_host": "0.3.1"` or newer, since older NativeCluster refuses the field; `ncdev check` says so. `ncdev new` writes `"0.1.0"`. Raise it for each version you publish |
+| `program` | the file in the package that NativeCluster starts |
+| `per_person` | optional: `true` for an app made for one person at a time, a personal agent whose one folder holds one person's conversations, memory and accounts (Hermes). NativeCluster runs one process of it for each person who uses it. Each process gets its own data folder, the app's whole data folder as it sees it, which no other person's process can read, and is told its person as it starts (`NC_APP_PERSON`, the id its tickets name them by). Every request and firing it gets is that person's; its waits in line and its schedules name them alone, and a schedule's id must be one no other person's row holds (put the person in it). It needs `"min_host": "0.3.7"` or newer, since older NativeCluster refuses the field. Without it, one process serves all the app's people and tells them apart by the ticket |
+| `icon` | optional: the app's icon, a square PNG in the package by its path from this folder (`"assets/icon.png"`). Make it 512 px; 128 to 1024 px and at most 1 MB are accepted, never SVG. It needs `"min_host": "0.3.0.4"` or newer, since older NativeCluster refuses the field; `ncdev check` says so. `ncdev package` carries the file. Without one, NativeCluster draws the name's initials |
+| `tasks` | each kind of model work: `{"id","name"}`, and optionally `ability`, `optional`, `min_skills`, `tests`, `models` |
+| `permissions` | what it asks for (below) |
+| `triggers` | each kind of schedule or event the app keeps: `{"id","kind","name"}`, `kind` `time` (at set times, or every so often), `event` (when the app says something happened) or `loop` (an agent's work, round after round until the app says done); `name` is what people see ("your morning summary"). `[]` for none. Declaring one needs `"min_host": "0.3.5"` or newer and `compute.background` naming it; `ncdev check` says so |
+| `storage` | each kind of data: `{"kind","label","place":"cluster"}` |
+| `review` | `null` |
+
+## Tasks
+
+- One task per kind of model work, named for what it does for a person:
+  `{"id": "translate", "name": "translating a book"}`. The app names the
+  task in every model call; NativeCluster picks the model.
+- `"ability"`: the usual way to say what a task needs, as a kind of model
+  rather than a particular one: `"embedding"` (search), `"transcription"`
+  (hearing speech), `"diarization"` (telling a recording's speakers apart:
+  optional, with `min_host` the release that adds it), `"vision"` (reading
+  pictures), `"completion"`, `"tools"`, `"thinking"`. Any model that can,
+  of any family, may do it.
+  `"speech"` (reading text aloud) and `"image-generation"` (making
+  pictures) are reserved: NativeCluster offers no such model yet, so a task
+  stating one matches nothing; make it optional, keep the feature hidden,
+  and `ncdev request-model -kind tts` or `-kind image` records the need.
+  Leave `ability` out only for a task any chat model may do. **A task
+  that is not chat must name its ability**: without one, any model counts
+  as doing it, so a reading-aloud task reads as covered by a chat model, the
+  app's page says "Any model here", and `/host/v1/models` names a chat
+  model for it (acceptance run 1: narrate, cover and find-passages had
+  none).
+- `"optional": true`: the app works without it, and shows that feature
+  only while `GET /host/v1/models?task=<id>` names a model. Use it for any
+  feature that waits for a model NativeCluster may not have on the Mac.
+- `min_skills`, `tests`, `models` narrow further which models may do it
+  (`ncdev spec models`). Leave them out unless the app truly needs them:
+  every one you add can only shrink what reaches you. `tests` need results
+  NativeCluster has published, so leave them out for now.
+
+## Permissions
+
+| id | Arguments | Means |
+|---|---|---|
+| `models.use` | `tasks` | the tasks it calls models for: every task |
+| `storage.cluster` | `kinds` | the kinds it keeps: every storage kind |
+| `compute.background` | `triggers` | working when no one is using it: every trigger the manifest declares, no more and no fewer |
+| `people.read` | | the person's email and name in the ticket (stop and ask) |
+| `purchase.ask` | | asking for a purchase; it can never charge (stop and ask) |
+| `files.pick` | | files a person picks on their Mac (not yet for your own apps) |
+| `connect.local` | `apps` | another app on this Mac (not yet for your own apps) |
+| `mic` | | the microphone (not yet for your own apps) |
+| `terminal` | | terminals of its own, a shell or any program run in one (an agent's terminal panel): the group's owner approves it for each app, an update that adds it waits for that OK, and the sandbox lets it open only the terminals it made, never another program's on the Mac; `min_host` 0.4.0 (stop and ask) |
+| `net.<plane>` | `hosts`, `what`, `off_switch` | reaching the internet at those hosts (exact names; `*.<name>` for any name under one, for a service whose servers change their names, with `min_host` 0.3.6): `what` says what leaves, in plain words; `off_switch` is an `LB_...` name of the app's own, like `LB_BOOKS`, which the host sets to `0` in the app's environment when the plane is off for everyone (how the app goes by it: `reference/contract.md` §5) |
+
+`net.casesearch`, `net.google` and `net.microsoft` are reserved names, each
+person's own call rather than the group's; your app's is a new
+name, like `net.books`, and is the group's: on for everyone given the app.
+
+## Storage
+
+Every kind is `"place": "cluster"`: kept on the group's main, in
+`NC_APP_DATA`. `this-mac` and `either` are refused for now (an app's part
+on a person's own Mac is not built yet): if the app keeps something on a
+person's own computer today, stop and ask.

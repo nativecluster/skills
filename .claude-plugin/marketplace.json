@@ -1,0 +1,15 @@
+{
+  "name": "nativecluster",
+  "description": "NativeCluster's skills for coding agents: private AI on your own Macs.",
+  "owner": {
+    "name": "NativeCluster by Ederworks",
+    "url": "https://www.nativecluster.com"
+  },
+  "plugins": [
+    {
+      "name": "nativecluster",
+      "source": "./",
+      "description": "Set up and use NativeCluster, and build apps for it: private AI on a team's own Macs, with one OpenAI-compatible endpoint, sign-in and roles."
+    }
+  ]
+}
