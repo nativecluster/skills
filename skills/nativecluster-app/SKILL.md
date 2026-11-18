@@ -88,7 +88,15 @@ publish as a tool, or make it a cluster app with what that keeps out
    the host; one NativeCluster does not offer is asked for with
    `ncdev request-model`, and the feature waits for it. Testing with real
    models is not running one yourself: do it under `ncdev run` (Phase 8),
-   which is the approved way, and is required.
+   which is the approved way, and is required. The one way you may get a
+   model NativeCluster offers onto this Mac is NativeCluster's own command
+   (the nativecluster skill; 0.4.21 or later): `nativecluster run` and
+   `nativecluster models get`, through the host, into this Mac's own
+   models folder, only a model that fits this Mac. The app never calls the
+   command, and never downloads a model itself. On a Mac where nobody has
+   set NativeCluster up, the nativecluster skill also says how you start it
+   with no person (`nativecluster setup`, 0.4.21 or later); the app never
+   does that either.
 3. **Reach nothing on this Mac but the host's socket.** The app may call
    any server it needs, on the internet or the office network, with no
    restriction from NativeCluster on which; naming its hosts in a `net.*`
