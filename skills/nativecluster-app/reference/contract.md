@@ -67,7 +67,10 @@ Every call to `LB_HOST_SOCKET` carries `Authorization: Bearer <app_credential>`.
 1. **Which model:** `GET /host/v1/models?task=<task>&kind=<chat|embedding|transcription|tts|image|diarization>`
    gives `{"models": [...], "to_get": [...]}`, and for `chat` also
    `"windows": {"<model>": <tokens>}`: the window the host runs each one's
-   calls in, prompt and answer together. Size every prompt from it, leaving
+   calls in, prompt and answer together (the smallest of the computers'
+   that may run the call, so it fits wherever the call runs; ask again
+   when a long session starts, since a computer joining can lower it).
+   Size every prompt from it, leaving
    your `max_tokens` of room for the answer, and never assume a window of
    your own; don't send `num_ctx` (the host sets it, and only lowers it to
    what you ask). Call `models[0]`, or any model in `models` (each meets
@@ -75,7 +78,9 @@ Every call to `LB_HOST_SOCKET` carries `Authorization: Bearer <app_credential>`.
    its `facts` (`speed` here in tokens a second, `rating` with its board;
    models.md, "A faster or a better model"). Empty
    `models`: no model on this Mac may do it now (an optional task's feature
-   stays hidden; a required one says it is unavailable, plainly). `tts`
+   stays hidden; a required one says it is unavailable, plainly). For a
+   task with `min_window`, only models that give that window where they run
+   are named, and while none does `"why"` holds words to show instead. `tts`
    (reading aloud) and `image` (painting pictures) answer only where the
    Mac's engine runs such a model, with `"voices"` (tts) or `"sizes"`
    (image) for `models[0]`: take them from there, never a fixed list. Ask

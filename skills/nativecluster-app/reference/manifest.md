@@ -13,7 +13,7 @@ permission. `ncdev new` writes a working one. The fields:
 | `program` | the file in the package that NativeCluster starts |
 | `per_person` | optional: `true` for an app made for one person at a time, a personal agent whose one folder holds one person's conversations, memory and accounts (Hermes). NativeCluster runs one process of it for each person who uses it. Each process gets its own data folder, the app's whole data folder as it sees it, which no other person's process can read, and is told its person as it starts (`NC_APP_PERSON`, the id its tickets name them by). Every request and firing it gets is that person's; its waits in line and its schedules name them alone, and a schedule's id must be one no other person's row holds (put the person in it). It needs `"min_host": "0.3.7"` or newer, since older NativeCluster refuses the field. Without it, one process serves all the app's people and tells them apart by the ticket |
 | `icon` | optional: the app's icon, a square PNG in the package by its path from this folder (`"assets/icon.png"`). Make it 512 px; 128 to 1024 px and at most 1 MB are accepted, never SVG. It needs `"min_host": "0.3.0.4"` or newer, since older NativeCluster refuses the field; `ncdev check` says so. `ncdev package` carries the file. Without one, NativeCluster draws the name's initials |
-| `tasks` | each kind of model work: `{"id","name"}`, and optionally `ability`, `optional`, `min_skills`, `tests`, `models` |
+| `tasks` | each kind of model work: `{"id","name"}`, and optionally `ability`, `optional`, `min_window`, `min_skills`, `tests`, `models` |
 | `permissions` | what it asks for (below) |
 | `triggers` | each kind of schedule or event the app keeps: `{"id","kind","name"}`, `kind` `time` (at set times, or every so often), `event` (when the app says something happened) or `loop` (an agent's work, round after round until the app says done); `name` is what people see ("your morning summary"). `[]` for none. Declaring one needs `"min_host": "0.3.5"` or newer and `compute.background` naming it; `ncdev check` says so |
 | `storage` | each kind of data: `{"kind","label","place":"cluster"}` |
@@ -43,6 +43,16 @@ permission. `ncdev new` writes a working one. The fields:
 - `"optional": true`: the app works without it, and shows that feature
   only while `GET /host/v1/models?task=<id>` names a model. Use it for any
   feature that waits for a model NativeCluster may not have on the Mac.
+- `"min_window": 64000`: the least context window, in tokens, a model
+  must give the task on the Mac that runs it (prompt and answer together),
+  for an app that fails below it, such as an agent whose instructions and
+  tools fill much of the window. NativeCluster sizes each chat model's
+  window from that Mac's hardware, so Get installs the app only where a
+  model gives it on a Mac of the cluster (today, 64,000 with `"tools"`
+  needs a 32 GB Mac), and `GET /host/v1/models` names only such models,
+  with `why` in words to show while none does. Chat tasks only. It needs
+  `"min_host": "0.4.22"` or newer, since older NativeCluster refuses the
+  field. Leave it out when any window will do.
 - `min_skills`, `tests`, `models` narrow further which models may do it
   (`ncdev spec models`). Leave them out unless the app truly needs them:
   every one you add can only shrink what reaches you. `tests` need results

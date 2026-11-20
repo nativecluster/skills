@@ -55,7 +55,11 @@ into an existing app.
   `transport.cancel(client)`: the wait leaves the line, the model stops
   writing, and the call raises `transport.Cancelled` (OpenAI's
   `APIConnectionError`); the client takes no model call after, so make a
-  new one.
+  new one. A call left any other way gives its seat back at once too and
+  stops at the engine: its stream closed from any thread, its client
+  closed, its connection shut down under it (an interrupt that shuts its
+  client's connections down, as an agent's Stop does), or its answer left
+  unread and garbage-collected.
   `ncdev check` refuses `openai` only where the kit's transport does not
   carry it.
 - **Its own processes** (an agent's gateway, workers, a code kernel) talk

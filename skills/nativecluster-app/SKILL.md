@@ -248,11 +248,13 @@ unpacks a package to at most 8 GB in at most 200,000 files and folders and
 refuses a bigger one; Hermes, the largest app so far, is about 480 MB in
 16,000. Then:
 
-- **Install it on this Mac yourself:** `ncdev install <dir>` packages the
+- **Install it on this Mac yourself:** `ncdev install <dir>` (or, from
+  NativeCluster 0.4.22, `nativecluster apps test <dir>`, the same, which
+  also takes a `.zip` from `ncdev package`) packages the
   app and puts it, whole, into NativeCluster's testing folder
   (`~/NativeCluster/Testing`). The NativeCluster app on this Mac installs it
   as a local app, for this Mac's owner only, and answers in
-  `<id>.result.json` beside it, which `ncdev install` waits for and prints:
+  `<id>.result.json` beside it, which either waits for and prints:
   `ok`, `app_id`, `sha256` (the package it took), `address` (where the app
   opens in NativeCluster's window on this Mac), or `error` (why not, in
   words). Never ask the user to upload the zip; install it this way. Only
@@ -262,14 +264,24 @@ refuses a bigger one; Hermes, the largest app so far, is about 480 MB in
   there (from 0.4.15), in NativeCluster's own window: Settings, Account,
   This Mac, Install apps dropped in the Testing folder. If the result says
   the Testing folder is off, tell the user where to turn it on and wait for
-  them, then install again; never try to turn it on yourself. If the user's
+  them, then install again; never try to turn it on yourself
+  (`nativecluster apps test` exits 1 with `testing_folder_off` then). If the user's
   NativeCluster has no testing folder yet (before 0.3.1), say so and stop
-  at the package. `-watch` installs again
+  at the package. `ncdev install -watch` installs again
   on every change, keeping the app's data. Installed, the app is local,
   shown as Testing under Development on the Apps page: nobody else has it.
-- **Give it to the group:** publishing stays a person's. On the Apps page,
-  the user presses Publish under Development, and the main's Mac owner OKs each
-  new app and each new version. Never publish for the user.
+- **Give it to the group:** only when the user asks, with
+  `nativecluster apps publish <app>` (NativeCluster 0.4.22 or later); never on
+  your own initiative. Publishing lets the app in for everyone in the group,
+  its internet included. An owner's or administrator's publish goes to
+  everyone at once; a Developer's waits for any owner's or administrator's
+  Add (`nativecluster apps requests` lists what waits, and `nativecluster apps
+  add <app>` adds one, for them, again only when they ask). On a computer
+  joined to a cluster the command publishes through the main, which decides
+  the same way, and the publishes waiting are listed and added on the main.
+  Exit 5 is the main out of reach: tell the user, and publish again once
+  the computer reaches it. If it says the user presses Publish on the app,
+  on Apps (exit 6, an older NativeCluster), do not try another way.
 - **Submit to NativeCluster (later):** only NativeCluster publishes apps to
   everyone. Send the package and `nc-model-requests.json` to whoever asked
   for the app; submitting is not built yet.
