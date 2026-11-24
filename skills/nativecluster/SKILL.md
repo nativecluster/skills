@@ -52,13 +52,14 @@ Applications and opens it.
 
 There are two ways to set up a new Mac.
 
+- **You, the agent** (NativeCluster 0.4.21 or later). On a Mac where nobody has set NativeCluster up, set it
+  up yourself, whether your person is there or not: starting NativeCluster and using its models need no
+  person and no browser. Your person signs in later, only to claim the cluster (below).
 - **A person at the Mac.** NativeCluster's window asks the person to sign in, and to start a cluster or join
   one with the PIN an administrator reads out. Then the command signs in with `nativecluster login`
-  (below).
-- **You, with no person** (NativeCluster 0.4.21 or later). On a Mac where nobody has set NativeCluster up,
-  you can set it up yourself.
+  (below). Joining a cluster your person already has is always this way.
 
-For example, Claude Code on Jane's new Mac mini, with Jane out:
+For example, Claude Code on Jane's new Mac mini, Jane there or not:
 
 ```sh
 curl -fsSL https://nativecluster.com/install.sh | sh
@@ -86,7 +87,7 @@ curl -fsSL https://nativecluster.com/install.sh | sh
 ## When a person is needed: the claim
 
 A cluster you started is yours until a person claims it. Until then, the steps that need a person exit 10
-(`claim_needed`, `next: claim`): a new administrator, owner or Mac owner, turning the API on, and a main's
+(`claim_needed`, `next: claim`): a new administrator or owner, turning the API on, and a main's
 PIN. Inviting people and adding a second Mac also wait for the claim. You never add a second Mac: a person
 does that, with the PIN.
 
@@ -115,7 +116,7 @@ nativecluster claim --email jane@acme.com
   `~/.local/bin/nativecluster`, or open a new terminal.
 - **Signing in.** On a Mac a person set up, `nativecluster login` opens their browser and waits; they sign in
   there. Never type, fill in or submit a sign-in.
-- **Confirmations.** A new administrator, owner or Mac owner, turning the API on, and a main's PIN are
+- **Confirmations.** A new administrator or owner, turning the API on, and a main's PIN are
   confirmed on the Mac with Touch ID or its password. The command waits. Never ask for a password or a PIN.
 - **A download question.** If `run` asks whether to download a model (`[Y/n]`, which it asks only a person
   at a terminal), that answer is the person's: never type it. Getting a model yourself is below.
@@ -130,8 +131,11 @@ nativecluster status
 
 - `doctor` needs no sign-in. It exits 3 until the command is signed in (`nativecluster login`, or `setup`
   on a fresh Mac), and 4 while NativeCluster isn't running.
-- On a fresh Mac, with nobody at a terminal, `run` exits 1 with `next: setup` and says: "No one has set up
-  NativeCluster on this Mac. An AI agent with no person: nativecluster setup --accept-terms".
+- On a fresh Mac, every command that needs a sign-in (`run`, `status`, `models`, ...) exits 1 with
+  `next: setup` and says: "No one has set up NativeCluster on this Mac. An AI agent starts it itself, its
+  person there or not: nativecluster setup --accept-terms --email <its person's email>. A person signs in
+  in NativeCluster's window instead." (Before 0.4.23, only `run` said so; the others said
+  `nativecluster login`: run `setup` anyway.)
 - `nativecluster help` (or `--help`, `-h`) lists every command and exits 0. Never run `nativecluster` with
   no command, or with any other first word starting with `-`: that starts NativeCluster itself, not a
   command. (Before 0.4.19, `--help` did too, and `help` wrote the list to stderr and exited 2.)
@@ -222,14 +226,25 @@ cat notes.txt | nativecluster run <model> "summarize this"
 - Models are large (often 5 to 60 GB) and take minutes to download. If your command times out, the download
   goes on: run the same `run` again and it waits for that download. `--no-get` never downloads: it prints
   the `nativecluster models get` line, with the size and the folder, and exits 9.
+- A model may come in several files (NativeCluster 0.4.23 or later): deepseek-v4-flash:0731 comes in four,
+  136.7 GB, and needs a Mac with 192 GB of memory or two Macs joined by Thunderbolt.
+  `nativecluster models get <model>` downloads the whole set, every file checked against NativeCluster's
+  catalog, and the model is there only once every file has landed; `nativecluster models list` shows it as
+  one download. Where a
+  computer's model engine can't download a model in several files yet, it says "This Mac's model engine
+  cannot download <model> yet: it comes in <n> files…" and exits 1 with nothing downloaded: tell the person
+  NativeCluster on that computer needs an update, and don't try again until it has one.
 - Before 0.4.21, a model the cluster doesn't have is never downloaded for you: `run` prints the
   `nativecluster models get` line that would get it, with its size and folder, and exits 9. Show the person
   that line, the size and the folder, and run it only when they say to download it.
 
 - Never print, paste, log or commit anything starting `nck_` (a key) or `nct_` (a session). The command
   writes them to files only the person can read, and prints the path.
-- From another computer on the office network, a tool needs a key from the main's Mac owner and the main's
-  address: https://www.nativecluster.com/docs/api.md
+- From another computer on the office network, a tool needs a key made on the main by someone whose
+  role can use the API (owners and admins always, Developers at first, Users once an admin turns it on in
+  Settings › Members › Roles; `nativecluster members roles` says which) and the main's address:
+  https://www.nativecluster.com/docs/api.md. A key answering 403 `no_api` is kept: its person's role
+  can't use the API now. Tell your person; don't make another key.
 
 ## Apps from the Store
 
@@ -237,7 +252,16 @@ On a cluster you started that nobody has claimed yet, `nativecluster apps get <a
 Store app for the whole cluster. A paid app needs a person, so for you it exits 10. On a person's cluster, apps
 for the whole cluster are got in NativeCluster's window.
 
-`nativecluster apps store` lists what the Store offers this computer.
+`nativecluster apps store` lists what the Store offers this computer; an app here with a newer version says
+`update`.
+
+`nativecluster apps update <app>` (NativeCluster 0.4.23 or later) installs an app's newer version on this computer
+now, as Update on Apps does, and says the version before and after; `nativecluster apps update --all` updates every
+app that has one. It is for owners, administrators and the computer's own person. An app that is running is closed,
+updated and opened again: at a terminal the command asks first, and `--close` is the yes. With no terminal and no
+`--close` it installs nothing and exits 1 with `next: close`: ask your person before you add `--close`, since it
+closes the app for everyone using it for a few seconds. An update installs by itself anyway once the app isn't
+answering anyone.
 
 When an app on this computer will not start because NativeCluster found its files changed (the Store and Apps
 show **Repair** in place of Open), `nativecluster apps repair <app>`, from an owner's or administrator's

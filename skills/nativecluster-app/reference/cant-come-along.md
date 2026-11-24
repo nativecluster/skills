@@ -13,10 +13,11 @@
 | Outside page assets | a page loads nothing from outside | vendor them |
 | Its own sign-in or profiles | the host signs people in | the ticket's `person` |
 | Its own administrators | roles are NativeCluster's | ask the host each person's role (`reference/platform.md`) |
-| Data on a person's own Mac (`this-mac`) | an app's part on a person's Mac is not built yet | `cluster` storage, or stop and ask |
-| A timer, cron or scheduler of its own | the host's one clock runs every schedule, on the main, waking the app | a schedule in the host's table (`reference/contract.md`, "Schedules") |
+| A storage place of `this-mac` or `either` | refused at install ("storing on This Mac is not supported yet") | `cluster` storage, which is already the app's `NC_APP_DATA` on the computer it runs on |
+| An older install's data (a folder in the person's home or Library, a database beside the program) | the sandbox reads and writes nothing outside the package and `NC_APP_DATA` | never read, copy or move it from the app; stop and ask (item 9) |
+| A timer, cron or scheduler of its own | the host's clock, on the computer the app runs on, runs every schedule and wakes the app; work for while that computer sleeps is handed to the main | a schedule in the host's table (`reference/contract.md`, "Schedules") |
 | A program outside the package (a person's `git`, `npm`, `node`, a compiler) | the sandbox runs only the package's own programs and `/bin`, `/usr/bin`, `/sbin`, `/usr/sbin`; and `/usr/bin/git`, `python3`, `make` and `clang` there are Xcode's shims, which fail inside it | carry what the app runs in the package; a coding agent that needs the person's tools is a tool that runs as the person, which only NativeCluster publishes (stop and ask, item 5) |
-| A person's own folders (`~/code`, a project, Documents) | an app reads and writes only its package and `NC_APP_DATA`; no permission picks a folder of the person's | keep the work in `NC_APP_DATA`, or stop and ask (item 5): a coding agent needs the tool kind |
+| A person's own folders (`~/code`, a project, Documents) | an app reads and writes only its package and `NC_APP_DATA`; no permission picks a folder of the person's | keep the work in `NC_APP_DATA` (a person may upload files they pick in the app's window: `reference/platform.md`), or stop and ask (item 5): a coding agent needs the tool kind |
 
 A feature that depends on something here is **off**, not broken: an
 optional task hidden until its model comes, or removed with the user's

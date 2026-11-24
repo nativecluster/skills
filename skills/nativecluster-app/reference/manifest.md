@@ -67,9 +67,9 @@ permission. `ncdev new` writes a working one. The fields:
 | `compute.background` | `triggers` | working when no one is using it: every trigger the manifest declares, no more and no fewer |
 | `people.read` | | the person's email and name in the ticket (stop and ask) |
 | `purchase.ask` | | asking for a purchase; it can never charge (stop and ask) |
-| `files.pick` | | files a person picks on their Mac (not yet for your own apps) |
+| `files.pick` | | files a person picks on their Mac. The app's window opens the Mac's file picker for a page's `<input type="file">` and uploads the file to the app without this item, and nothing in NativeCluster reads the item yet (`reference/platform.md`, "The app's window") |
 | `connect.local` | `apps` | another app on this Mac (not yet for your own apps) |
-| `mic` | | the microphone (not yet for your own apps) |
+| `mic` | | the microphone, in the app's own window: each person turns it on for themselves on the app's About page, and macOS then asks them; while it is off, the window refuses the microphone (`reference/platform.md`, "The app's window") |
 | `terminal` | | terminals of its own, a shell or any program run in one (an agent's terminal panel): the group's owner approves it for each app, an update that adds it waits for that OK, and the sandbox lets it open only the terminals it made, never another program's on the Mac; `min_host` 0.4.0 (stop and ask) |
 | `net.<plane>` | `hosts`, `what`, `off_switch` | reaching the internet at those hosts (exact names; `*.<name>` for any name under one, for a service whose servers change their names, with `min_host` 0.3.6): `what` says what leaves, in plain words; `off_switch` is an `LB_...` name of the app's own, like `LB_BOOKS`, which the host sets to `0` in the app's environment when the plane is off for everyone (how the app goes by it: `reference/contract.md` §5) |
 
@@ -79,7 +79,13 @@ name, like `net.books`, and is the group's: on for everyone given the app.
 
 ## Storage
 
-Every kind is `"place": "cluster"`: kept on the group's main, in
-`NC_APP_DATA`. `this-mac` and `either` are refused for now (an app's part
-on a person's own Mac is not built yet): if the app keeps something on a
-person's own computer today, stop and ask.
+Every kind is `"place": "cluster"`. Whatever the word suggests, it means
+the app's `NC_APP_DATA` on the computer that runs it: on each person's own
+computer for their copy, and on the main for the main's copy. It is not a
+folder that every computer shares. Data that people share needs one home
+(the main's copy, reached through the hand-over, or a server of the app's
+own), which is a stop-and-ask item. `this-mac` and `either` are refused at
+install ("storing on This Mac is not supported yet"). Declare every kind
+`cluster`, which already keeps it on the computer the app runs on. If the
+app keeps something outside `NC_APP_DATA` today (an older install's
+folder), stop and ask.

@@ -2,10 +2,11 @@
 name: nativecluster-app
 version: 0.1.0
 description: |
-  Turn an app, in any language, into a NativeCluster app: one that runs on a
-  group's own Macs, reaches models only through NativeCluster's host, knows
-  people only by the host's ticket, and keeps its data on the group's main.
-  Use when the user says "make this a NativeCluster app", "port this app to
+  Turn an app, in any language, into a NativeCluster app: one that runs on
+  each person's own computer in a group, sends only its model calls to the
+  group's Macs through NativeCluster's host, knows people only by the host's
+  ticket, and keeps its data in the folder the host gives it on the computer
+  it runs on. Use when the user says "make this a NativeCluster app", "port this app to
   NativeCluster", "build an app for NativeCluster", "use the nativecluster
   skill", "package this for my group", or asks how an app reaches
   NativeCluster's models. Iron Law: never invent an answer to a stop-and-ask
@@ -15,7 +16,7 @@ description: |
 
 # Make a NativeCluster app (read -> map -> ask -> manifest -> adapt -> check -> try -> package)
 
-NativeCluster runs a group's apps on its own Macs. Every model call goes to
+NativeCluster runs a group's apps on its own computers. Every model call goes to
 the group's own models through NativeCluster's **host**, so nothing a person
 writes reaches a hosted model; the host signs every request with a **ticket**
 that names the person; an app keeps its data in the folder the host gives it.
@@ -48,22 +49,75 @@ each update's version, so use the `ncdev` of the NativeCluster on this Mac,
 never a copy from elsewhere: an older one carries an older contract (a port
 once read one from before 0.3.7's open internet, and built the wrong app).
 
+## Where an app runs, keeps its data, and thinks
+
+This is what NativeCluster does today. Ask it of every part of the app, and
+never fall back on the older picture of an app that runs on, and keeps its
+data on, the group's main:
+
+- **It runs on each person's own computer.** Once the group publishes an
+  app, every computer joined to the cluster offers it to each person given
+  it on Members. That person downloads it there, and it runs there whole:
+  its pages, its program, its data and its schedules. The copy on the main
+  serves whoever opens it on the main.
+- **Only its model calls leave.** Each wait in line and each model call
+  goes to the main's one line, and the line runs it on one of the group's
+  inference computers (the main, or a Mac lent to it). With the main out of
+  reach, a person's own call is refused at once, with words to show them,
+  and background work waits until the main is back (`ncdev spec hostapi`,
+  "Apps on a computer whose switch is off").
+- **Its data lives where it runs.** `NC_APP_DATA` is a folder on the
+  computer that runs that copy, so each person's copy keeps that person's
+  data on their own computer. A storage kind's `"place": "cluster"` means
+  that folder today, whatever the word suggests (`reference/manifest.md`).
+- **Shared data needs one home that every copy reaches.** Data that people
+  share (one matter's files, a team's list) needs one home. Two exist
+  today:
+  - **The main's copy of the app.** It keeps the data in its own
+    `NC_APP_DATA` on the main and decides who may see what. Each person's
+    copy reaches it through the hand-over (`POST /host/v1/main/hand`, from
+    0.4.13): one JSON value of at most 256 KiB a call, a large file in
+    pieces, an answer within a minute, and only while the main is in reach.
+  - **A server of the app's own**, which the app may call.
+
+  A shared folder that every copy opens like a disk (synced storage) is
+  planned, not built. Which home to use is a decision for the user
+  (`reference/stop-and-ask.md`, item 4).
+- **Schedules fire where the app runs.** They run on that computer's clock,
+  and a schedule missed while it was off runs once when it starts again.
+  Work that must happen while the person's computer sleeps is handed to the
+  same app on the main (`POST /host/v1/main/hand`, from 0.4.13), which
+  keeps it and runs it there (`reference/contract.md`, "Schedules").
+- **The sandbox fences each copy on its own computer.** On a person's laptop
+  as on the main, a copy reads only its package, writes only its
+  `NC_APP_DATA`, and reaches that computer only through the host's socket.
+  The sandbox is separate from where data lives and where models run.
+- **`per_person` is about processes, not where data lives.** It is for an
+  app made for one person at a time (a personal agent) that one computer may
+  run for several people, a process and a folder each. It is not how a
+  group's people are kept apart: each copy already holds only its own
+  computer's data, and an app without it tells people apart by the ticket.
+
 ## A cluster app, or a tool that runs as the person
 
-What decides it is **where each piece of data is stored**, not whose it is.
-A coding agent may run outside the sandbox because the person's own laptop
-holds the code, and only its model calls go to the inference computers,
-which hold no copy of it; a computer that did hold the code, beside other
-people's data, would have to sandbox it:
+A cluster app runs in the sandbox on every computer, the person's own
+included. What can take an app out of the sandbox is **where each piece of
+data is stored**, not whose it is. A coding agent may run outside the
+sandbox because the person's own laptop holds the code, and only its model
+calls go to the inference computers, which hold no copy of it. A computer
+that did hold the code, beside other people's data, would have to sandbox
+it:
 
-- Data a person's work keeps **on a cluster computer** (the main, an
-  inference computer), beside other people's, belongs to a **cluster app**,
-  which runs in the sandbox, at least for those parts. This skill builds
-  that kind.
+- Data kept **on the cluster** belongs to a **cluster app**, which runs in
+  the sandbox, at least for those parts. On the cluster means read by other
+  people's copies, or kept where other people's data is kept (the main, an
+  inference computer). This skill builds that kind.
 - Data kept **only on the person's own device**, where only model calls
-  leave it (NativeCluster keeps none of their words), can belong to a
-  **tool that runs as the person**, outside the sandbox, as a coding agent
-  must (it needs the person's folders and developer tools).
+  leave it (NativeCluster keeps none of their words), fits a cluster app
+  too: that person's copy keeps it in `NC_APP_DATA`, sandboxed. It can
+  instead belong to a **tool that runs as the person**, outside the sandbox,
+  when the app needs what the sandbox keeps out: the person's own folders
+  and developer tools, as a coding agent does.
 
 **A tool that runs as the person is NativeCluster's alone to publish.**
 The kind exists since 0.4.6 (`"kind": "tool"`, `ncdev spec models`, "A
@@ -72,9 +126,10 @@ ID that runs as its person in their own terminal, never in the sandbox and
 never run by the host, its model calls a tool session at the local address
 that Members checks on every call. Only NativeCluster publishes one, so
 this skill never makes one, and never presents a tool as something a port
-can ship itself. When an app's data would all stay on the person's device,
-put it to the user as a decision (Phase 4): hand it to NativeCluster to
-publish as a tool, or make it a cluster app with what that keeps out
+can ship itself. When an app needs the person's own folders or developer
+tools, and every piece of its data would stay on the person's device, put
+it to the user as a decision (Phase 4): hand it to NativeCluster to publish
+as a tool, or make it a cluster app with what that keeps out
 (`reference/cant-come-along.md`).
 
 ## Iron Law
@@ -131,21 +186,29 @@ what the finding says, or stop and ask.
 
 List every part of the app and what it does, in a table: its pages, its
 server and routes, where it keeps data, every model it uses (and for what),
-every outside service it calls, background or long work, how it knows who a
-person is, and anything it downloads at run time. Read the code, not the
-README: what runs is what matters.
+every outside service it calls, background or long work (and whether it
+must happen while the person's computer sleeps), how it knows who a person
+is, how it signs a person in to another service, any data an older install
+left on the computer, and anything it downloads at run time. Read the code,
+not the README: what runs is what matters.
 
 Give the table a column **stored where: the cluster, or only this device**,
 filled for every piece of data the app keeps (a person's files, their
-history, settings, caches, an index). It decides what kind the app is (above)
-and which parts keep the sandbox.
+history, settings, caches, an index). Mark a row only this device when one
+person's copy keeps it on their own computer for them alone, which is the
+default. Mark it the cluster when other people's copies must
+read it too, or when it is kept where other people's data is kept. A row
+marked the cluster needs a home that every copy reaches: the main's copy
+of the app, or a server of the app's own (above, and stop and ask). The column also decides what kind the app is (above) and which
+parts keep the sandbox.
 
 ## Phase 2 — Map each part
 
 For each row, write the NativeCluster way (`reference/mapping.md`), "NativeCluster
 does it" (`reference/platform.md`), or "can't come along"
 (`reference/cant-come-along.md`). Keep the table; it is the plan, and the
-report at the end.
+report at the end. A part that links a person's account at a service (OAuth and
+the like) maps by `reference/linking-accounts.md`: never a loopback listener.
 
 ## Phase 3 — Models
 
@@ -171,12 +234,15 @@ Collect every decision on `reference/stop-and-ask.md` that this app raises,
 and ask the user **all at once**, each with the options and your
 recommendation. Do not go on with a part whose decision is open; go on with
 the rest. Confirm with the user **every row whose data you marked "only this
-device"**: any data stored on the cluster keeps those parts sandboxed.
+device"**: any data stored on the cluster keeps those parts sandboxed. Ask
+about every row you marked the cluster too: it waits for a home that every
+copy reaches.
 
 ## Phase 5 — Write nc-app.json
 
 From the map and the answers (`reference/manifest.md`; `ncdev spec schema`).
-Storage is `cluster` only and `review` is null. `triggers` lists the
+Storage is `cluster` only, which is the app's `NC_APP_DATA` on the computer
+it runs on, and `review` is null. `triggers` lists the
 schedules and events the app keeps (`reference/manifest.md`), with
 `compute.background` naming every one and `"min_host": "0.3.5"` or newer.
 
@@ -192,7 +258,9 @@ Keep the contract (`reference/contract.md`), part by part:
    data by the ticket's person id.
 5. Call models through the host: which model, a turn in line, the call with
    the grant, the grant back.
-6. Keep every file in `NC_APP_DATA`.
+6. Keep every file in `NC_APP_DATA`, on the computer the app runs on. Never
+   read, copy or move an older install's data from outside it (stop and
+   ask).
 7. Honour a plane's off switch in the environment, which an operator may
    set to `0` (`reference/contract.md` §5).
 8. Offer an optional task's feature only while the host names a model for
@@ -208,7 +276,8 @@ stands. The running half is best-effort (it is not a sandbox): it does not
 excuse anything the static half or this skill forbids.
 
 `ncdev check` cannot see inside a compiled program: it skips the app's
-program and any file over 4 MiB, so a Bun, Deno or Go binary, or a bundle
+program, Go's tests (`*_test.go`, `testdata/`, which never ship) and any
+file over 4 MiB, so a Bun, Deno or Go binary, or a bundle
 of an app's whole JavaScript, is never read. A clean check of a compiled
 app proves nothing about what is compiled in: read its dependency list
 (`package.json`, the bundler's metafile, `go.mod`) yourself, against
@@ -273,7 +342,9 @@ refuses a bigger one; Hermes, the largest app so far, is about 480 MB in
 - **Give it to the group:** only when the user asks, with
   `nativecluster apps publish <app>` (NativeCluster 0.4.22 or later); never on
   your own initiative. Publishing lets the app in for everyone in the group,
-  its internet included. An owner's or administrator's publish goes to
+  its internet included. Each person given it then downloads it to their
+  own computer, where it runs with its own data and sends only its model
+  calls to the cluster. An owner's or administrator's publish goes to
   everyone at once; a Developer's waits for any owner's or administrator's
   Add (`nativecluster apps requests` lists what waits, and `nativecluster apps
   add <app>` adds one, for them, again only when they ask). On a computer

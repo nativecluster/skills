@@ -11,10 +11,10 @@
 | A log file, log page or log viewer | diagnostics to stdout or stderr (NativeCluster keeps them), never a person's words; the page is removed |
 | Model, provider or API-key settings | gone: the host picks the model for each task |
 | Files and databases in its folder or home | `NC_APP_DATA` only (a SQLite file there is fine) |
-| Data shared between people | per person by default; sharing between people is a decision (stop and ask) |
+| Data shared between people | per person by default, on each person's own computer; a shared home (the main's copy of the app, reached through the hand-over, or a server of the app's own) is a decision (stop and ask) |
 | Model calls | `reference/models.md`: by task, through the host |
 | Long work (whole-book jobs, batch processing) | a job: started from a request, calls in lane `B` with a job ticket, progress kept in `NC_APP_DATA`, resumed after a restart |
-| Work on a timer, cron or schedule, an event, a heartbeat | a schedule in the host's table, its firing answered at `POST /nc/v1/wake` (`reference/contract.md`, "Schedules"); the app's own timer, cron thread or scheduler library goes |
+| Work on a timer, cron or schedule, an event, a heartbeat | a schedule in the host's table, fired on the computer the app runs on, its firing answered at `POST /nc/v1/wake` (`reference/contract.md`, "Schedules"); work that must run while that computer sleeps is handed to the main (stop and ask); the app's own timer, cron thread or scheduler library goes |
 | Downloads at run time (books, datasets, assets) | keep them: declare each host in a `net.*` permission; ask only about what the download may be used for (`reference/stop-and-ask.md`, 2) |
 | CDN scripts, web fonts, images from outside | vendor them into the package |
 | FFmpeg or another tool it shells out to | only if the feature using it stays; it ships inside the package with its license (stop and ask before adding a GPL build) |

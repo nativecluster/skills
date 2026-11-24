@@ -13,7 +13,7 @@ NativeCluster's host starts your **program** (the file nc-app.json's
 | `LB_APP_SOCKET` | a unix socket path: serve your HTTP here, and nowhere else (no TCP port) |
 | `LB_HOST_SOCKET` | a unix socket path: call the host here |
 | `LB_SECRETS_STDIN=1` | your secrets arrive on stdin |
-| `NC_APP_DATA` | your data folder: keep every file here, nowhere else. The app's own folder is read-only once installed (its files must stay what the Mac owner vouched for), so nothing is ever written beside the program: no cache, log or database there |
+| `NC_APP_DATA` | your data folder, on the computer running this copy of the app (each person's own computer, or the main): keep every file here, nowhere else. The app's own folder is read-only once installed (its files must stay what the Mac owner vouched for), so nothing is ever written beside the program: no cache, log or database there |
 | `NC_APP_BASE` | the path you are served at (`/`): links you write start with it |
 | `NC_APP_SOCKETS` | a short folder of your own (emptied at each start) for unix sockets your own processes use between them: a socket's path holds about 100 bytes, so make them here, not in `NC_APP_DATA`. From host 0.3.5 (`min_host`); absent before |
 
@@ -239,10 +239,12 @@ finished job is one whose every unit the model actually did.
 
 ## 6. Schedules
 
-Work on a timer, a schedule or an event runs on the host's one clock, on
-the group's main, which never sleeps. The app keeps no timer, cron thread
-or scheduler of its own: it tells the host what to wake it for, and the
-host wakes it (starting it first if it rests). Why the app sets a schedule
+Work on a timer, a schedule or an event runs on the host's clock, on the
+computer the app runs on: a person's own computer for their copy, the main
+for the main's. A schedule missed while that computer was off runs once
+when it starts again. The app keeps no timer, cron thread or scheduler of
+its own: it tells the host what to wake it for, and the host wakes it
+(starting it first if it rests). Why the app sets a schedule
 is its own business: for a person's request, an agent's own plan, another
 firing's work.
 
@@ -259,8 +261,9 @@ firing's work.
   `{"cron":"0 9 * * 1-5"}` (five fields, digits and `* / , -` only),
   `{"hour":8,"minute":30,"weekdays":"1111100"}` (Monday first), `{"every":
   <seconds>}` (at least 60), `{"at": <Unix seconds>}` (once: a reminder),
-  or `{"event":"notes.saved","min_gap":<seconds>}`; times are the main's
-  local time, and one trigger fires at most once a minute. Also `list`,
+  or `{"event":"notes.saved","min_gap":<seconds>}`; times are the local
+  time of the computer whose clock fires them, and one trigger fires at
+  most once a minute. Also `list`,
   `get`, `enable` `{"id","on"}`, `defer` `{"id","at"}`, `fire` `{"id"}`
   (run it now), `emit` `{"event","person"}`, `pause`/`resume`
   `{"person","by":"person"}`, `firings`, `counts`, `last`, `clear`.
@@ -305,6 +308,28 @@ firing's work.
   lane `B` (or `I` for work that waits for an idle Mac). It waits behind
   people and takes turns with other apps; the host decides how much it
   gets.
+- **While the person's computer sleeps** (from 0.4.13, `min_host`
+  `0.4.13`): some things go to the same app on the group's main, the
+  computer assumed always on. That is work that must happen on time with
+  that computer shut, or shared data the user chose to keep in the main's
+  copy (`reference/stop-and-ask.md`, items 4 and 8). `POST
+  /host/v1/main/hand` on the host's socket, with the credential, carries
+  one JSON value of at most 256 KiB to the main's copy, as one of the
+  computer's signed calls. That copy gets it as `POST /nc/v1/hand`, with
+  the host's ticket naming the person, and its JSON answer, given within a
+  minute, comes back as the answer. For an app made for each person, the
+  person is the process's own; for any other app, it is the person the
+  computer is registered to. The main's copy keeps what it was handed in
+  its own `NC_APP_DATA`, and for a handed job sets its schedule on the
+  main's clock. Neither host reads or keeps the body. A refusal is
+  `{"code", "words"}` (`words` to show the person). `409` `no_main` means
+  this computer is the main or has none: keep the work yourself. `503`
+  `away` means the main is out of reach: keep it and hand it over again
+  later, since the host keeps no copy. The others are `404`
+  `app_not_on_main`, `403` (the main refused the computer or the person),
+  and `413` `too_large`. `ncdev spec hostapi`, "Handing the main something
+  to keep", has the whole table; in Python, the kit's
+  `host().hand_to_main(payload)` raises `Away` and `NoMain`.
 - **The beat:** while it runs, an app with triggers gets `POST
   /nc/v1/tick` every 15 seconds, for upkeep that needs no firing (a paused
   unit whose pause ended). Answer it, or answer 404.
