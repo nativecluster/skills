@@ -12,8 +12,9 @@ recommendation, and wait. Go on with the parts no open decision touches.
    download's license or terms, whose name may appear, content that may
    not be shared where the app is sold.
 3. **People's names** (`people.read`): does the app need a person's email or
-   name, or is its own id for them enough? Recommend no unless the app
-   shows who did something.
+   name, or the list of the group's people (to pick someone to share
+   with), or is its own id for them enough? Recommend no unless the app
+   shows who did something or lets a person choose someone.
 4. **Sharing between people**: is anything one person makes visible to
    another? Each person's copy of the app runs on their own computer and
    keeps their data there, so by default every person's data is their own.

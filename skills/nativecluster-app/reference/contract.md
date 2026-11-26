@@ -23,6 +23,10 @@ NativeCluster's host starts your **program** (the file nc-app.json's
 - The working folder is not yours: find your own files relative to the
   program, or embed them.
 - On SIGTERM, finish quickly and exit.
+- Write diagnostics to stdout or stderr, never a person's words. From host
+  0.4.24 the host keeps them in `NC_APP_DATA/logs/output.log`, each line
+  stamped and marked `out` or `err` (`reference/platform.md`, "Logs and
+  activity"); leave `logs/` to the host.
 
 ## 2. Serving
 
@@ -30,6 +34,19 @@ NativeCluster's host starts your **program** (the file nc-app.json's
 - Put **one ticket check in front of every route** (below). A route
   registered anywhere else answers anyone.
 - Answer `GET /healthz` with 200 (`{"status":"ok"}`): the host's readiness check.
+- **A slow first start** (a database migrated on the first run): the host
+  asks `/healthz` until it answers, with no deadline, and never idles an app
+  out while it starts. A request waits up to five minutes for that first
+  answer, then is told the app is starting. An update's first start is held
+  to the same five minutes: one that has not answered by then is stopped and
+  the update rolled back. So answer `/healthz` as soon as you listen
+  (200, or 503 while you migrate: the host counts either as up), and answer
+  each page request at once, a "getting ready" page if need be: the app's
+  window gives up on a load that sends nothing for 60 seconds, and asks
+  again. A stop can still come mid-migration (NativeCluster quitting or
+  updating, the app updated or removed, its grants changed): SIGTERM, then
+  SIGKILL a grace later. Migrate so a stop leaves the data whole and the
+  next start resumes.
 - Answer `GET /.nc/whoami` with `{"person": "<the ticket's person, or \"\">"}`,
   nothing else (never an email or a name). It is how `ncdev check` proves
   the ticket check; the host never calls it in normal use.
@@ -235,6 +252,38 @@ finished job is one whose every unit the model actually did.
   `{"person": "p_…", "role": "admin"}`, one of `owner`, `admin`, `member`.
   Show and accept such a change only for `owner` or `admin`, asking each
   time, never caching it. It needs no `people.read`.
+- Its own processes. From 0.4.24 an app stops and restarts what it
+  started: any signal to a child, to a child's process group, or to the
+  programs a shell of its own runs, so a launcher stops its services in
+  order and restarts a hung one, and a parser in a group of its own is
+  killed on a timeout. It never signals another app, another person's
+  process of the same app, or the host. Before 0.4.24 it could signal
+  itself alone: an app that stops what it started says `"min_host":
+  "0.4.24"`. Its processes share data over unix sockets in
+  `NC_APP_SOCKETS`, or a file in `NC_APP_DATA` that each maps; the
+  system's shared memory and semaphores (`shm_open`, `sem_open`, System V)
+  are refused, so a database server that needs them (PostgreSQL) does not
+  run in the sandbox: carry an embedded one (SQLite, PGlite). Python's
+  `multiprocessing` locks, queues and pools use `sem_open` and fail there
+  too: use threads, or processes that talk over the app's unix sockets.
+  Never put a secret (an API key, a bot's token, a password) in an
+  environment variable or on a command line, for the app or any program it
+  runs: every app and every program of the person on that computer can read
+  a process's arguments and environment, and the sandbox cannot stop that.
+  Pass a secret to a process of your own on its stdin, or keep it in the
+  host's secrets store (`reference/linking-accounts.md`). See `ncdev
+  spec`, "The app sandbox".
+- The group's people, for an app whose manifest asks `people.read` (to
+  show who did something, or to let a person pick someone to share with):
+  `GET /host/v1/group/people` (with the credential) answers `{"people":
+  [{"id": "p_…", "name": "…", "email": "…", "has_app": true}]}`: everyone
+  in the group and switched on, each by the same id their tickets carry
+  (someone who never opened the app is given theirs now, and keeps it),
+  and whether they have the app. Ask it each time you show it: someone
+  removed is gone from the next answer. Without `people.read` it is 404.
+  Say `min_host` 0.4.24. The kits: Go `HostClient.GroupPeople(ctx)`
+  (`ErrNoPeopleRead` for the 404), Python `nativecluster.host().group_people()`
+  (a list of `GroupPerson`; `NoPeopleRead` for the 404).
 - Pages load nothing from outside: vendor every script, style and font.
 
 ## 6. Schedules

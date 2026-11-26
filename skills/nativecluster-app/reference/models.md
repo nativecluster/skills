@@ -101,6 +101,31 @@ one call. Send one call at a time: a Mac generates with one model one answer
 at a time, so calls sent together only wait in line; how many of a job's
 pieces run at once is NativeCluster's to decide when its job API arrives.
 
+## What a model can do
+
+NativeCluster holds every model call to what its model can do, in one
+place every call passes (from 0.4.24; `ncdev spec hostapi`, "What a model
+can do"): a picture needs a model whose abilities name `vision`, tools one
+that names `tools`, a search call an `embedding` model, a recording a
+`transcription` model (a chat model takes none: transcribe it first). A
+call its model cannot take is answered 400 before any model loads, with a
+`code` (`model_cannot_see`, `model_has_no_tools`, `model_cannot_hear`,
+`model_wrong_kind`, `model_cannot_output`) and words naming a model of the
+cluster that can. So:
+
+- name the ability in the task (`"ability": "vision"` for a task that
+  reads scans or photos) and call the models route for it: every model it
+  names can take the call;
+- keep pictures on the task that reads them: a chat task beside it that
+  only writes text never gets the picture, it gets what the vision task
+  read from it;
+- show a refusal's words as they are; they say which model can.
+
+Thinking asked of a model that does not think (`"think": true`, a
+`reasoning_effort`) is answered without it, and the answer's
+`X-NC-Answered-Without: thinking` says so: read it rather than wait for a
+`reasoning_content` that will not come.
+
 ## Prompts written for another model
 
 A model tuned for one job (a translator, a summarizer) takes a bare

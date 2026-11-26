@@ -1,6 +1,6 @@
 {
   "name": "nativecluster",
-  "version": "0.4.23",
+  "version": "0.4.24",
   "description": "Set up and use NativeCluster, and build apps for it: private AI on a team's own Macs, with one OpenAI-compatible endpoint, sign-in and roles.",
   "author": {
     "name": "NativeCluster by Ederworks",

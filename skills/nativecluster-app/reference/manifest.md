@@ -6,8 +6,8 @@ permission. `ncdev new` writes a working one. The fields:
 | Field | What |
 |---|---|
 | `format` | `"nc-app.v1"` |
-| `id` | lowercase letters, digits and `-`, 2 to 32: `"classics"` |
-| `name` | what people see, up to 40: `"Modern Classics"` |
+| `id` | lowercase letters, digits and `-`, 2 to 32: `"classics"`. It is the app: keep it the same in every version, since an update with another id is refused |
+| `name` | what people see, up to 40: `"Modern Classics"`. From NativeCluster 0.4.24 a new version may change it (its Store entry names the new name): Apps, the app's window and its Dock icon show the new name, and its data stays in the folder it had (`NC_APP_DATA`). Older NativeCluster refuses a renaming version until it is on 0.4.24. Read your data folder from `NC_APP_DATA`, never from the name |
 | `min_host` | optional: the oldest NativeCluster it runs on |
 | `version` | optional: the app's own version, `"0.1.0"`: numbers and dots, optionally a short label after a dash (`"1.3.0-beta.2"`), at most 32. Its card on Apps shows it ("Modern Classics 1.3 · Live version is 1.2") and its Publish names it ("Publish 1.3"). It needs `"min_host": "0.3.1"` or newer, since older NativeCluster refuses the field; `ncdev check` says so. `ncdev new` writes `"0.1.0"`. Raise it for each version you publish |
 | `program` | the file in the package that NativeCluster starts |
@@ -65,7 +65,7 @@ permission. `ncdev new` writes a working one. The fields:
 | `models.use` | `tasks` | the tasks it calls models for: every task |
 | `storage.cluster` | `kinds` | the kinds it keeps: every storage kind |
 | `compute.background` | `triggers` | working when no one is using it: every trigger the manifest declares, no more and no fewer |
-| `people.read` | | the person's email and name in the ticket (stop and ask) |
+| `people.read` | | the person's email and name in the ticket, and the group's people listed by the host (`GET /host/v1/group/people`, `min_host` 0.4.24): each one's id, name, email and whether they have the app (stop and ask) |
 | `purchase.ask` | | asking for a purchase; it can never charge (stop and ask) |
 | `files.pick` | | files a person picks on their Mac. The app's window opens the Mac's file picker for a page's `<input type="file">` and uploads the file to the app without this item, and nothing in NativeCluster reads the item yet (`reference/platform.md`, "The app's window") |
 | `connect.local` | `apps` | another app on this Mac (not yet for your own apps) |

@@ -8,7 +8,7 @@
 | Its own accounts, profiles, logins, "who are you" screens | gone: the ticket's `person` is the person; key every person's data by it; a person's name needs `people.read` (stop and ask) |
 | Its own admins, roles or "first user is admin" | gone: roles are NativeCluster's (`reference/platform.md`); a setting only an administrator may change is shown and accepted only when the host's role route answers `owner` or `admin` |
 | A health check, keep-alive or watchdog on a timer | gone: NativeCluster runs the app; the repairs it made run at startup or where the data is read |
-| A log file, log page or log viewer | diagnostics to stdout or stderr (NativeCluster keeps them), never a person's words; the page is removed |
+| A log file, log page or log viewer | diagnostics to stdout or stderr, never a person's words: NativeCluster keeps them in `NC_APP_DATA/logs/output.log` on the computer the app runs on (`reference/platform.md`); the app's own log file and page are removed |
 | Model, provider or API-key settings | gone: the host picks the model for each task |
 | Files and databases in its folder or home | `NC_APP_DATA` only (a SQLite file there is fine) |
 | Data shared between people | per person by default, on each person's own computer; a shared home (the main's copy of the app, reached through the hand-over, or a server of the app's own) is a decision (stop and ask) |

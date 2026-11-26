@@ -34,8 +34,8 @@ comes from it, never from memory:
     ncdev spec schema        nc-app.json's fields
     ncdev spec permissions   every permission an app may ask for
     ncdev models <dir>       which models NativeCluster offers for each task
-    ncdev check <dir>        the contract, proven (static and running)
-    ncdev package <dir>      the package to install
+    ncdev check <dir>        the contract, proven for the package (static and running)
+    ncdev package <dir>      the package to install (each takes -include, the same ones)
     ncdev run <dir>          the app behind a NativeCluster of its own, to try it
     ncdev install <dir>      install it on this Mac (local), and read NativeCluster's answer
 
@@ -174,9 +174,10 @@ what the finding says, or stop and ask.
 - **A large upstream (an agent, an IDE, anything you don't own) gets a port
   repository of its own**: the port's files there (manifest, launcher,
   adapters, packaging), and the upstream built from a pinned commit, never
-  the port's files mixed into a fork. `ncdev check` reads every file of the
-  folder it is given, so a port made inside its upstream's fork fails on the
-  upstream's own source, with hundreds of findings that are not the port's.
+  the port's files mixed into a fork. `ncdev check` reads all the Go source
+  of the folder it is given and everything its `-include`s carry, so a port
+  made inside its upstream's fork fails on the upstream's own source, with
+  hundreds of findings that are not the port's.
 - Prefer **Go** for a new or rewritten app: one binary, no runtime to ship,
   and `ncdev new` writes a working example to copy from. Another language
   works if the package carries everything the program needs to run
@@ -220,6 +221,15 @@ the like) maps by `reference/linking-accounts.md`: never a loopback listener.
   `ncdev request-model <dir> -task t -kind k -why "..." -tried "..." -meanwhile hidden`
   (`reference/models.md`). For a kind NativeCluster serves, "tried" is
   required: which offered models you tried and how they fell short.
+- **Check a model's abilities before sending pictures or tools.** A task
+  whose calls carry pictures names `"ability": "vision"`, and one whose
+  calls carry tools names `tools`, so the models route offers only models
+  that can; send each call to a model that route named for its task. A
+  picture to a model that reads none is refused (400 `model_cannot_see`),
+  tools to one that calls none too (`model_has_no_tools`), in words naming
+  a model of the cluster that can: route pictures to a model that reads
+  them, show the words as they are, and never drop the picture to make the
+  call pass (`reference/models.md`, "What a model can do").
 - A feature that may lack its model on some Mac is an **optional task**
   (`"optional": true`): before offering it, the app asks
   `GET /host/v1/models?task=<it>`, and while `models` is empty the feature
@@ -270,14 +280,21 @@ Keep the contract (`reference/contract.md`), part by part:
 
 ## Phase 7 — Check until clean
 
-Run `ncdev check <dir>` and fix each finding as it says, until it reports 0
-errors. Read every warning and either fix it or say in the report why it
+Run `ncdev check <dir>`, with the `-include` for each file or folder the
+program needs beside it (the same ones `ncdev package`, `ncdev run` and
+`ncdev install` take), and fix each finding as it says, until it reports 0
+errors. It holds the package those make, never the rest of the folder: it
+runs the program from a copy of the package alone, as NativeCluster will,
+reads only the source the package carries (a Go app's own Go source
+included, since it is built into the program), and names, with the
+`-include` to add, a file or folder of the app's the program needs and the
+package leaves out. Read every warning and either fix it or say in the report why it
 stands. The running half is best-effort (it is not a sandbox): it does not
 excuse anything the static half or this skill forbids.
 
 `ncdev check` cannot see inside a compiled program: it skips the app's
-program, Go's tests (`*_test.go`, `testdata/`, which never ship) and any
-file over 4 MiB, so a Bun, Deno or Go binary, or a bundle
+program, Go's tests (`*_test.go`, `testdata/`, which never ship), what the
+package does not carry, and any file over 4 MiB, so a Bun, Deno or Go binary, or a bundle
 of an app's whole JavaScript, is never read. A clean check of a compiled
 app proves nothing about what is compiled in: read its dependency list
 (`package.json`, the bundler's metafile, `go.mod`) yourself, against

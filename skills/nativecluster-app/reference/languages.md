@@ -67,13 +67,14 @@ into an existing app.
   the app's own; `asyncio` and `socket.socketpair()` work as they are.
 - **Schedules:** `nativecluster.host()`: `put_schedule(person,
   schedule("reminder:3f9a", "reminder", cron("0 9 * * 1-5")))`,
-  `start_loop`, `post_units`, `net_on`, `role`. Long work for a firing:
+  `start_loop`, `post_units`, `net_on`, `role`, and, with `people.read`,
+  `group_people`. Long work for a firing:
   answer `WakeAnswer(jobs=[...], running=True)` and run it with
   `run_firing(host(), firing, work)`.
 - **The package must carry its own Python** and every dependency, so the
   program runs on a Mac with nothing installed: a launcher script as the
   program, beside a bundled Python runtime and the app's code
-  (`ncdev package -include <folder>` for each). Weigh that against
+  (`-include <folder>` for each, to `ncdev check` as to `ncdev package`). Weigh that against
   rewriting in Go, and say which you chose. The app's folder is read-only
   when it runs: the host sets `PYTHONDONTWRITEBYTECODE=1`; never write
   `__pycache__` or anything else beside the code (`ncdev check` fails if

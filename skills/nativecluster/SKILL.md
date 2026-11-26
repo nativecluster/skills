@@ -207,6 +207,9 @@ OpenAI's Python and Node libraries read the first two by themselves. The API is 
 (`/v1/chat/completions`), plus embeddings, speech and pictures where the cluster has those models; not the
 Responses API. `nativecluster models list` shows every model the cluster has.
 
+An app that takes MCP servers (Claude Desktop, Cursor) can use NativeCluster through `nativecluster mcp`
+(0.4.24 or later): its tools are these commands, run as the person, with the same refusals.
+
 To ask a model once, from a terminal or a script:
 
 ```sh
